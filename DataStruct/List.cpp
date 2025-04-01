@@ -1,4 +1,4 @@
-#include "List.h"
+﻿#include "List.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -12,13 +12,19 @@ void list_init(List *list,void (*destroy)(void *data)) {
 }
 
 /* list_destroy */
-//void list_destroy(List *list) {
-//	void* data;
-//	/*Remove each element*/
-//	while (list_size(list)>0) {
-//
-//	}
-//}
+void list_destroy(List *list) {
+	void* data;
+	/*Remove each element.*/
+
+	while (list_size(list)>0) {
+		if (list_rem_next(list, NULL, (void**)&data) == 0 && list->destroy != NULL) {
+			/*call a user defined function to fee dynamically allocated data.*/
+			list->destroy(data);
+		}
+	}
+	memset(list, 0, sizeof(List));
+	return;
+}
 
 /* list_ins_next */
 int list_ins_next(List* list,ListElmt *element,const void *data) {
@@ -51,8 +57,36 @@ int list_ins_next(List* list,ListElmt *element,const void *data) {
 }
 
 /* list_rem_next */
-int list_rem_next(List *list,ListElmt,void **data) {
-	ListElmt* new_element;
+int list_rem_next(List *list,ListElmt *element,void **data) {
+	ListElmt* old_element;
+
+	if (list_size(list) == 0) return -1;
+
+	if (element == NULL) {
+		/*Handle removal from head of the list.*/
+		/*如果没有传入要删除的元素,那就从头部开始删除*/
+		*data = list->head->data;
+		old_element = list->head;
+		list->head = list->head->next;
+
+		if (list_size(list) == 1)
+			list->tail = NULL;
+	}
+	else
+	{
+		/* handle removal from somewhere other than the head.*/
+		if (element->next == NULL) return -1;
+
+		*data = element->next->data;
+		old_element = element->next;
+		element->next = element->next->next;
+
+		if (element->next == NULL)
+			list->tail = element;
+	}
+	free(old_element);
+	list->size--;
+	return 0;
 }
 
 /* Remove the emlent from the list */
